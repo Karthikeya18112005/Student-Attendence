@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Attendance</title>
+    
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f7f6;
+            text-align: center;
+            padding: 20px;
+        }
+
+        h2 {
+            color: #333;
+        }
+
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            margin: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        tr:hover {
+            background-color: #ddd;
+        }
+
+        select {
+            padding: 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        .summary {
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 5px;
+            margin: 5px;
+            transition: 0.3s;
+        }
+
+        .btn-excel {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .btn-excel:hover {
+            background-color: #218838;
+        }
+
+        .btn-pdf {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .btn-pdf:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Student Attendance</h2>
+
+        <table id="attendanceTable">
+            <thead>
+                <tr>
+                    <th>Roll No</th>
+                    <th>Name</th>
+                    <th>Attendance</th>
+                </tr>
+            </thead>
+            <tbody id="student-list"></tbody>
+        </table>
+
+        <p class="summary">Total Students: <span id="total-students"></span></p>
+        <p class="summary">Present: <span id="present-count"></span></p>
+        <p class="summary">Absent: <span id="absent-count"></span></p>
+
+        <button class="btn btn-excel" onclick="exportToExcel()">Export to Excel</button>
+        <button class="btn btn-pdf" onclick="exportToPDF()">Export to PDF</button>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const students = [
+                { rollNo: 1, name: "Alok", status: "Absent" },
+                { rollNo: 2, name: "Bala", status: "Present" },
+                { rollNo: 3, name: "Charan", status: "Absent" },
+                { rollNo: 4, name: "David", status: "Present" },
+                { rollNo: 5, name: "Swadeep", status: "Present" },
+                { rollNo: 6, name: "Harshith", status: "Present" },
+                { rollNo: 7, name: "Tharun", status: "Present" },
+                { rollNo: 8, name: "Vijay", status: "Present" },
+                { rollNo: 9, name: "Karthik", status: "Present" },
+                { rollNo: 10, name: "Xavier", status: "Present" },
+                { rollNo: 11, name: "Vivek", status: "Present" }
+            ];
+
+            const studentList = document.getElementById("student-list");
+
+            function populateTable() {
+                studentList.innerHTML = "";
+                students.forEach((student, index) => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${student.rollNo}</td>
+                        <td>${student.name}</td>
+                        <td>
+                            <select class="attendance-select" data-index="${index}">
+                                <option value="Present" ${student.status === "Present" ? "selected" : ""}>Present</option>
+                                <option value="Absent" ${student.status === "Absent" ? "selected" : ""}>Absent</option>
+                            </select>
+                        </td>
+                    `;
+                    studentList.appendChild(row);
+                });
+
+                updateSummary();
+            }
+
+            function updateSummary() {
+                let presentCount = students.filter(student => student.status === "Present").length;
+                document.getElementById("total-students").innerText = students.length;
+                document.getElementById("present-count").innerText = presentCount;
+                document.getElementById("absent-count").innerText = students.length - presentCount;
+            }
+
+            document.addEventListener("change", function (event) {
+                if (event.target.classList.contains("attendance-select")) {
+                    const index = event.target.getAttribute("data-index");
+                    students[index].status = event.target.value;
+                    updateSummary();
+                }
+            });
+
+            populateTable();
+        });
+
+        function exportToExcel() {
+            let table = document.getElementById("attendanceTable");
+            let wb = XLSX.utils.table_to_book(table, { sheet: "Attendance" });
+            XLSX.writeFile(wb, "Attendance_Report.xlsx");
+        }
+
+        function exportToPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            html2canvas(document.getElementById('attendanceTable')).then(canvas => {
+                let imgData = canvas.toDataURL('image/png');
+                doc.addImage(imgData, 'PNG', 10, 10, 180, 0);
+                doc.save("Attendance_Report.pdf");
+            });
+        }
+    </script>
+
+</body>
+</html>
