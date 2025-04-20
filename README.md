@@ -1,2 +1,2 @@
 # Student-Attendence portfolio
-used for attendence purpose
+used for student attendence 
